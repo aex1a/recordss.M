@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For M
+        
+    </title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        :root {
+            /* Calm 90s Browny/Earthy Palette */
+            --bg-color: #27211b; 
+            --glow-color: rgba(160, 110, 60, 0.25);
+            --tv-frame: #3a2e24;
+            --tv-trim: #201913;
+            --vcr-dark: #352a20;
+            --vcr-light: #4f4033;
+            --btn-bg: #d9cec1;
+            --btn-border-light: #f5ede4;
+            --btn-border-dark: #8c7b6c;
+            --led-color: #ffb74d; /* Warm amber LED */
+            --led-off: #4a3515;
+            --tape-color: #2b231d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background: radial-gradient(circle at 50% 30%, var(--glow-color), var(--bg-color) 70%);
+            font-family: 'VT323', monospace;
+            color: #d9cec1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* --- CRT Television --- */
+        .tv-set {
+            width: 100%;
+            max-width: 600px;
+            height: 350px;
+            background: #0d0a08;
+            border: 20px solid var(--tv-frame);
+            border-radius: 20px;
+            border-bottom: 30px solid var(--tv-frame);
+            position: relative;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9), inset 0 0 15px var(--tv-trim);
+            overflow: hidden;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #050403;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .screen-content {
+            font-size: 3rem;
+            color: rgba(255, 230, 200, 0.85);
+            text-shadow: 2px 0px 1px #ff5555, -2px 0px 1px #5555ff;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 2;
+        }
+
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.04));
+            background-size: 100% 4px, 3px 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .flicker {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,240,220,0.02);
+            opacity: 0;
+            z-index: 11;
+            pointer-events: none;
+            animation: flickerAnim 0.15s infinite;
+        }
+
+        .static {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: repeating-radial-gradient(circle at 17% 32%, #e6d5c3, #1a1511 0.00085px);
+            opacity: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .static.active {
+            animation: staticAnim 0.2s infinite;
+            opacity: 0.2;
+        }
+
+        @keyframes flickerAnim {
+            0% { opacity: 0.02; }
+            50% { opacity: 0.06; }
+            100% { opacity: 0.02; }
+        }
+
+        @keyframes staticAnim {
+            0% { background-position: 0 0; }
+            50% { background-position: 10px 10px; }
+            100% { background-position: -10px -10px; }
+        }
+
+        /* --- VCR Player --- */
+        .vcr {
+            width: 100%;
+            max-width: 600px;
+            background: var(--vcr-dark);
+            border: 2px solid var(--tv-trim);
+            border-top: 4px solid var(--vcr-light);
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 15px 25px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .vcr-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .tape-slot {
+            flex-grow: 1;
+            height: 40px;
+            background: #0a0806;
+            border: 2px solid #1a140f;
+            border-bottom: 2px solid #2b221a;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slot-flap {
+            width: 95%;
+            height: 20px;
+            background: #1c1611;
+            border: 1px solid #2e241c;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: top;
+        }
+
+        .tape-slot.open .slot-flap {
+            transform: rotateX(-80deg);
+        }
+
+        .led-panel {
+            background: #080604;
+            border: 2px inset #1f1812;
+            padding: 5px 15px;
+            width: 120px;
+            text-align: right;
+            box-shadow: inset 0 0 10px #000;
+        }
+
+        .led-text {
+            color: var(--led-off);
+            font-size: 1.5rem;
+            text-shadow: 0 0 5px rgba(255, 183, 77, 0);
+            text-transform: uppercase;
+        }
+
+        .led-text.active {
+            color: var(--led-color);
+            text-shadow: 0 0 8px var(--led-color);
+        }
+
+        .vcr-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--vcr-light);
+            padding: 10px;
+            border-radius: 3px;
+            border: 1px solid var(--tv-trim);
+        }
+
+        /* Static B&W Buttons */
+        .btn {
+            background: var(--btn-bg);
+            color: #111;
+            border: 2px solid var(--btn-border-dark);
+            border-top: 2px solid var(--btn-border-light);
+            border-left: 2px solid var(--btn-border-light);
+            padding: 6px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            pointer-events: none;
+        }
+
+        .btn:active {
+            border: 2px solid var(--btn-border-dark);
+            border-bottom: 2px solid var(--btn-bg);
+            border-right: 2px solid var(--btn-bg);
+            background: #c9bfb3;
+            transform: translateY(2px);
+        }
+
+        .slider-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 15px;
+        }
+
+        .time-display {
+            font-size: 1.2rem;
+            color: var(--btn-bg);
+            min-width: 90px;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 10px;
+            border-radius: 2px;
+            background: var(--btn-bg);
+            cursor: pointer;
+            margin-top: -8px;
+            border: 1px solid #111;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #1a140f;
+            border: 1px solid #33281e;
+            border-radius: 2px;
+        }
+
+        /* --- Tapes --- */
+        .tapes-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+            justify-content: center;
+        }
+
+        .tape {
+            background: var(--tape-color);
+            width: 150px;
+            height: 80px;
+            border: 2px solid #15110e;
+            border-top: 3px solid #3a3028;
+            border-radius: 5px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.6);
+        }
+
+        .tape:hover {
+            transform: translateY(-5px);
+            background: #332a22;
+        }
+
+        .tape-label {
+            background: #e3d8c8;
+            color: #111;
+            width: 80%;
+            height: 40%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 1px solid #8c7b6c;
+            border-radius: 2px;
+            font-family: 'Courier New', Courier, monospace; 
+        }
+
+        .tape.inserted {
+            transform: translateY(-50px) scale(0.8);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 650px) {
+            .vcr-controls { flex-wrap: wrap; justify-content: center; }
+            .slider-container { width: 100%; }
+            .tapes-container { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tv-set">
+        <div class="screen">
+            <div class="scanlines"></div>
+            <div class="flicker"></div>
+            <div class="static" id="tvStatic"></div>
+            <div class="screen-content" id="tvContent">CH 3</div>
+        </div>
+    </div>
+
+    <div class="vcr">
+        <div class="vcr-top">
+            <div class="tape-slot" id="tapeSlot">
+                <div class="slot-flap"></div>
+            </div>
+            <div class="led-panel">
+                <span class="led-text" id="ledDisplay">STOP</span>
+            </div>
+        </div>
+        
+        <div class="vcr-controls">
+            <button class="btn" id="btnPlay" title="Play">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <button class="btn" id="btnPause" title="Pause">
+                <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <button class="btn" id="btnStop" title="Stop">
+                <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+            </button>
+            <button class="btn" id="btnEject" title="Eject">
+                <svg viewBox="0 0 24 24"><path d="M5 17h14v2H5zm7-12L5.33 15h13.34z"/></svg>
+            </button>
+            
+            <div class="slider-container">
+                <button class="btn" id="btnRewind" title="-5 Seconds">
+                    <svg viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
+                </button>
+                <input type="range" id="seekSlider" value="0" step="0.1" min="0" max="100">
+                <button class="btn" id="btnForward" title="+5 Seconds">
+                    <svg viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+                </button>
+                <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tapes-container">
+        <div class="tape" data-id="1">
+            <div class="tape-label">Tape 1</div>
+        </div>
+        <div class="tape" data-id="2">
+            <div class="tape-label">Tape 2</div>
+        </div>
+        <div class="tape" data-id="3">
+            <div class="tape-label">Tape 3</div>
+        </div>
+    </div>
+
+    <script>
+        // --- AUDIO CONFIGURATION ---
+        // Manually replace these paths with your actual audio files
+        
+        // 1. Tape Content Audio
+        const tapeAudioPaths = {
+            1: "tape1.mp3",
+            2: "tape2.mp3",
+            3: "tape3.mp3"
+        };
+
+        // 2. Mechanical Sound Effects (Placeholders)
+        const vcrSounds = {
+            insert: new Audio("vcr_insert.mp3"),
+            eject: new Audio("vcr_eject.mp3")
+        };
+
+        // --- STATE & DOM ELEMENTS ---
+        let currentTapeId = null;
+        let isAnimating = false;
+        
+        const audioPlayer = new Audio();
+        
+        const tapes = document.querySelectorAll('.tape');
+        const tapeSlot = document.getElementById('tapeSlot');
+        const ledDisplay = document.getElementById('ledDisplay');
+        const tvStatic = document.getElementById('tvStatic');
+        const tvContent = document.getElementById('tvContent');
+        const seekSlider = document.getElementById('seekSlider');
+        const timeDisplay = document.getElementById('timeDisplay');
+        
+        const btnPlay = document.getElementById('btnPlay');
+        const btnPause = document.getElementById('btnPause');
+        const btnStop = document.getElementById('btnStop');
+        const btnEject = document.getElementById('btnEject');
+        const btnRewind = document.getElementById('btnRewind');
+        const btnForward = document.getElementById('btnForward');
+
+        // --- HELPER FUNCTIONS ---
+        
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "00:00";
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function setLED(text, active = true) {
+            ledDisplay.innerText = text;
+            if (active) {
+                ledDisplay.classList.add('active');
+            } else {
+                ledDisplay.classList.remove('active');
+            }
+        }
+
+        function triggerStatic(duration = 500) {
+            tvStatic.classList.add('active');
+            tvContent.style.opacity = '0';
+            setTimeout(() => {
+                tvStatic.classList.remove('active');
+                if (currentTapeId && !audioPlayer.paused) {
+                    tvContent.innerText = "PLAY";
+                    tvContent.style.opacity = '1';
+                }
+            }, duration);
+        }
+
+        // --- TAPE MECHANICS ---
+
+        function ejectTape(callback) {
+            if (!currentTapeId) {
+                if(callback) callback();
+                return;
+            }
+
+            isAnimating = true;
+            
+            // Play mechanical eject sound
+            vcrSounds.eject.currentTime = 0;
+            vcrSounds.eject.play().catch(() => {}); // Catch error if missing file
+
+            audioPlayer.pause();
+            audioPlayer.src = "";
+            setLED("EJCT", true);
+            triggerStatic(1200);
+            tapeSlot.classList.add('open');
+            
+            setTimeout(() => {
+                const insertedTape = document.querySelector(`.tape[data-id="${currentTapeId}"]`);
+                if (insertedTape) insertedTape.classList.remove('inserted');
+                
+                tapeSlot.classList.remove('open');
+                currentTapeId = null;
+                setLED("STOP", false);
+                tvContent.innerText = "CH 3";
+                tvContent.style.opacity = '0.3';
+                isAnimating = false;
+                
+                resetSlider();
+
+                if (callback) callback();
+            }, 1000);
+        }
+
+        function insertTape(tapeElement) {
+            if (isAnimating) return;
+            const tapeId = tapeElement.getAttribute('data-id');
+
+            if (currentTapeId) {
+                ejectTape(() => executeInsert(tapeElement, tapeId));
+            } else {
+                executeInsert(tapeElement, tapeId);
+            }
+        }
+
+        function executeInsert(tapeElement, tapeId) {
+            isAnimating = true;
+
+            // Play mechanical insert sound
+            vcrSounds.insert.currentTime = 0;
+            vcrSounds.insert.play().catch(() => {}); // Catch error if missing file
+
+            tapeSlot.classList.add('open');
+            tapeElement.classList.add('inserted');
+            setLED("LOAD", true);
+            triggerStatic(1500);
+
+            setTimeout(() => {
+                tapeSlot.classList.remove('open');
+                currentTapeId = tapeId;
+                
+                audioPlayer.src = tapeAudioPaths[tapeId];
+                audioPlayer.load();
+                
+                playAudio();
+                isAnimating = false;
+            }, 1200);
+        }
+
+        // --- AUDIO CONTROLS ---
+
+        function playAudio() {
+            if (!currentTapeId) return;
+            audioPlayer.play().catch(e => console.log("Auto-play blocked by browser."));
+            setLED("PLAY", true);
+            tvContent.innerText = "PLAY";
+            tvContent.style.opacity = '1';
+        }
+
+        function pauseAudio() {
+            if (!currentTapeId) return;
+            audioPlayer.pause();
+            setLED("PAUS", true);
+            tvContent.innerText = "PAUSE";
+            tvContent.style.opacity = '1';
+            triggerStatic(300);
+        }
+
+        function stopAudio() {
+            if (!currentTapeId) return;
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            setLED("STOP", true);
+            tvContent.innerText = "STOP";
+            tvContent.style.opacity = '1';
+            triggerStatic(400);
+        }
+
+        // --- SLIDER MECHANICS ---
+
+        function updateSliderDisplay() {
+            if (audioPlayer.duration) {
+                seekSlider.max = audioPlayer.duration;
+                seekSlider.value = audioPlayer.currentTime;
+                timeDisplay.innerText = `${formatTime(audioPlayer.currentTime)} / ${formatTime(audioPlayer.duration)}`;
+            }
+        }
+
+        function resetSlider() {
+            seekSlider.value = 0;
+            seekSlider.max = 100;
+            timeDisplay.innerText = "00:00 / 00:00";
+        }
+
+        // --- EVENT LISTENERS ---
+
+        tapes.forEach(tape => {
+            tape.addEventListener('click', () => {
+                if (currentTapeId === tape.getAttribute('data-id')) return;
+                insertTape(tape);
+            });
+        });
+
+        btnPlay.addEventListener('click', playAudio);
+        btnPause.addEventListener('click', pauseAudio);
+        btnStop.addEventListener('click', stopAudio);
+        btnEject.addEventListener('click', () => ejectTape());
+
+        btnRewind.addEventListener('click', () => {
+            if(currentTapeId) audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 5);
+        });
+        
+        btnForward.addEventListener('click', () => {
+            if(currentTapeId) audioPlayer.currentTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 5);
+        });
+
+        audioPlayer.addEventListener('timeupdate', updateSliderDisplay);
+        audioPlayer.addEventListener('loadedmetadata', updateSliderDisplay);
+        audioPlayer.addEventListener('ended', () => {
+            setLED("STOP", true);
+            tvContent.innerText = "END";
+            tvContent.style.opacity = '1';
+            triggerStatic(500);
+        });
+
+        seekSlider.addEventListener('input', () => {
+            if (currentTapeId) {
+                audioPlayer.currentTime = seekSlider.value;
+            }
+        });
+
+        tvContent.style.opacity = '0.3'; 
+    </script>
+</body>
+</html>
